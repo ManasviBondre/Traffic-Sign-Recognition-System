@@ -18,7 +18,11 @@ CLASS_NAMES = ["Cautionary", "Informatory", "Mandatory"]
 
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model(MODEL_PATH)
+    return tf.keras.models.load_model(
+    MODEL_PATH,
+    compile=False,
+    safe_mode=False
+)
 
 if not MODEL_PATH.exists():
     st.error(f"Model file not found: {MODEL_PATH}")
