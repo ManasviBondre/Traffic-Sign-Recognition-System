@@ -13,16 +13,32 @@ st.set_page_config(
 st.title("🚦 Traffic Sign Recognition System")
 st.write("Upload a traffic sign image to predict its category.")
 
-MODEL_PATH = Path(__file__).parent / "model" / "traffic_sign_mobilenetv2.keras"
+MODEL_PATH = Path(__file__).parent / "model" / "traffic_sign_mobilenetv2.weights.h5"
 CLASS_NAMES = ["Cautionary", "Informatory", "Mandatory"]
 
 @st.cache_resource
 def load_model():
-    return tf.keras.models.load_model(
-    MODEL_PATH,
-    compile=False,
-    safe_mode=False
-)
+    base_model = tf.keras.applications.MobileNetV2(
+        input_shape=(160, 160, 3),
+        include_top=False,
+        weights=None
+    )
+
+    base_model.trainable = False
+
+    model = tf.keras.Sequential([
+        tf.keras.layers.Input(shape=(160, 160, 3)),
+        tf.keras.layers.Rescaling(scale=1/127.5, offset=-1),
+        base_model,
+        tf.keras.layers.GlobalAveragePooling2D(),
+        tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Dense(128, activation="relu"),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(3, activation="softmax")
+    ])
+
+    model.load_weights(MODEL_PATH)
+    return model
 
 if not MODEL_PATH.exists():
     st.error(f"Model file not found: {MODEL_PATH}")
